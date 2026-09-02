@@ -1,0 +1,19 @@
+{
+  "name": "@msgdock/mocks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@msgdock/contracts": "0.1.0",
+    "@msgdock/api-client": "0.1.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc -b",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  }
+}
