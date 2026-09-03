@@ -45,7 +45,7 @@ The UI communicates through a typed API client.
 
 Development can use mock transport:
 
-````text
+```text
 UI
  ↓
 API Client
@@ -53,9 +53,11 @@ API Client
 Mock Transport
  ↓
 Mock Service
+```
 
 The same UI can later use the real backend:
 
+```text
 UI
  ↓
 API Client
@@ -65,61 +67,68 @@ HTTP Transport
 Backend
  ↓
 Provider
+```
 
-Repository structure
+## Repository structure
+
+```text
 apps/       Applications
 packages/   Shared packages
 mocks/      Mock infrastructure
 docs/       Architecture and API documentation
-Development
+```
 
-Requirements:
+## Development
 
-Node.js 20+
-npm
+### Requirements
 
-Install dependencies:
+- Node.js 20+
+- npm
 
-npm install
-
-Run type checking:
-
-npm run typecheck
-
-Run tests:
-
-npm run test
-
-Build:
-
-npm run build
-Development roadmap
-Architecture and contracts
-Terminal-style web UI
-Dynamic UI backed by mock APIs
-Backend API
-Provider integrations
-CI/testing improvements
-
----
-
-## One important thing: don't create `package-lock.json` manually
-
-After you've created the files above, run:
+### Install dependencies
 
 ```bash
 npm install
+```
 
-npm will generate package-lock.json for you.
+### Run formatting checks
 
-Then:
+```bash
+npm run format:check
+```
 
+### Run linting
+
+```bash
+npm run lint
+```
+
+### Run type checking
+
+```bash
 npm run typecheck
-npm run test
-npm run build
+```
 
-If those pass, then commit.
-````
+### Run tests
+
+```bash
+npm run test
+```
+
+### Build
+
+```bash
+npm run build
+```
+
+## Development roadmap
+
+- Architecture and contracts
+- Terminal-style web UI
+- Dynamic UI backed by mock APIs
+- Backend API
+- Provider integrations
+- CI/testing improvements
 
 ## Open Source and Cloud
 
