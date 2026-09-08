@@ -12,6 +12,9 @@
     },
     {
       "path": "./mocks"
+    },
+    {
+      "path": "./apps/web"
     }
   ]
 }
