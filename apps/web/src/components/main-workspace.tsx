@@ -1,12 +1,14 @@
-import { DetailsPane } from '@/components/details-pane';
-import { MessagePane } from '@/components/message-pane';
+import type { MessagesApi } from '@msgdock/contracts';
+
+import { MessageInbox } from '@/features/messages/message-inbox';
 import type { WorkspaceSection } from '@/components/navigation';
 
 interface MainWorkspaceProps {
   activeSection: WorkspaceSection;
+  api: MessagesApi;
 }
 
-export function MainWorkspace({ activeSection }: MainWorkspaceProps) {
+export function MainWorkspace({ activeSection, api }: MainWorkspaceProps) {
   const contextLabel =
     activeSection === 'Overview' ? 'all channels' : activeSection;
 
@@ -23,14 +25,11 @@ export function MainWorkspace({ activeSection }: MainWorkspaceProps) {
         </div>
         <div className="hidden items-center gap-2 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground/45 sm:flex">
           <span className="size-1.5 rounded-full bg-status-success" />
-          awaiting transport
+          api-backed
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_19rem]">
-        <MessagePane />
-        <DetailsPane />
-      </div>
+      <MessageInbox activeSection={activeSection} api={api} />
     </main>
   );
 }

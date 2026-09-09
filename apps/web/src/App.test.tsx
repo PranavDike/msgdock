@@ -1,5 +1,13 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import type { Message, MessagesApi } from '@msgdock/contracts';
 
 import App from './App';
 
@@ -7,27 +15,101 @@ afterEach(() => {
   cleanup();
 });
 
-describe('MsgDock shell', () => {
-  it('renders an API-ready empty message state', () => {
+const emailMessage: Message = {
+  id: 'msg_test_email',
+  channel: 'email',
+  provider: 'mock-email',
+  status: 'delivered',
+  from: 'hello@msgdock.local',
+  to: 'developer@example.com',
+  subject: 'Test message',
+  body: 'This is a test message.',
+  createdAt: '2026-09-02T09:00:00.000Z',
+};
+
+function createApi(overrides: Partial<MessagesApi> = {}): MessagesApi {
+  return {
+    list: vi.fn().mockResolvedValue({ data: [emailMessage] }),
+    get: vi.fn().mockResolvedValue({ data: emailMessage }),
+    ...overrides,
+  };
+}
+
+describe('MsgDock message workspace', () => {
+  it('renders messages from the configured API client and updates the inspector', async () => {
     render(<App />);
 
-    expect(screen.getByText('MSGDOCK')).toBeInTheDocument();
-    expect(screen.getByText('No messages in this view')).toBeInTheDocument();
+    const messageRow = await screen.findByRole('button', {
+      name: /Welcome to MsgDock/,
+    });
+    fireEvent.click(messageRow);
+
     expect(
-      screen.getByText(/Captured email and SMS traffic will appear here/),
+      await screen.findByText('developer@example.com'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('This is a development email.'),
     ).toBeInTheDocument();
   });
 
-  it('updates the active workspace section without adding message fixtures', () => {
-    render(<App />);
+  it('shows loading, empty, and error list states', async () => {
+    let resolveList: (value: { data: Message[] }) => void = () => undefined;
+    const pendingList = new Promise<{ data: Message[] }>((resolve) => {
+      resolveList = resolve;
+    });
+    const loadingApi = createApi({
+      list: vi.fn().mockReturnValue(pendingList),
+    });
+    const { unmount } = render(<App api={loadingApi} />);
 
+    expect(screen.getByLabelText('Loading messages')).toBeInTheDocument();
+    resolveList({ data: [] });
+    expect(
+      await screen.findByText('No messages in this view'),
+    ).toBeInTheDocument();
+
+    unmount();
+    const errorApi = createApi({
+      list: vi.fn().mockRejectedValue(new Error('Service unavailable')),
+    });
+    render(<App api={errorApi} />);
+
+    expect(
+      await screen.findByText('Unable to load messages'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Service unavailable')).toBeInTheDocument();
+  });
+
+  it('requests the active channel and filters through the API query', async () => {
+    const list = vi.fn().mockResolvedValue({ data: [emailMessage] });
+    const api = createApi({ list });
+    render(<App api={api} />);
+
+    await waitFor(() => expect(list).toHaveBeenCalledWith({}));
     fireEvent.click(screen.getByRole('button', { name: 'Email' }));
 
-    expect(screen.getByRole('button', { name: 'Email' })).toHaveAttribute(
-      'aria-current',
-      'page',
+    await waitFor(() =>
+      expect(list).toHaveBeenLastCalledWith({ channel: 'email' }),
     );
-    expect(screen.getByText('capture stream / email')).toBeInTheDocument();
-    expect(screen.getByText('No messages in this view')).toBeInTheDocument();
+  });
+
+  it('shows an inspector error when the selected message is no longer available', async () => {
+    const api = createApi({
+      get: vi
+        .fn()
+        .mockRejectedValue(new Error('Message not found: msg_test_email')),
+    });
+    render(<App api={api} />);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /Test message/ }),
+    );
+
+    expect(
+      await screen.findByText('Unable to load message'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Message not found: msg_test_email'),
+    ).toBeInTheDocument();
   });
 });

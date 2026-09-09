@@ -1,13 +1,22 @@
 import { useState } from 'react';
 
 import './App.css';
+import type { MessagesApi } from '@msgdock/contracts';
+
+import { createMockMessagesApi } from '@/api/mock-api';
 import { AppHeader } from '@/components/app-header';
 import { AppSidebar } from '@/components/app-sidebar';
 import { MainWorkspace } from '@/components/main-workspace';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import type { WorkspaceSection } from '@/components/navigation';
 
-function App() {
+interface AppProps {
+  api?: MessagesApi;
+}
+
+const defaultApi = createMockMessagesApi();
+
+function App({ api = defaultApi }: AppProps) {
   const [activeSection, setActiveSection] =
     useState<WorkspaceSection>('Overview');
 
@@ -20,7 +29,7 @@ function App() {
           onSectionChange={setActiveSection}
         />
         <SidebarInset className="min-h-0 overflow-hidden bg-background">
-          <MainWorkspace activeSection={activeSection} />
+          <MainWorkspace activeSection={activeSection} api={api} />
         </SidebarInset>
       </div>
     </SidebarProvider>
