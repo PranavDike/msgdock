@@ -12,33 +12,37 @@
   --card-foreground: oklch(0.93 0.018 260);
   --popover: oklch(0.17 0.02 260);
   --popover-foreground: oklch(0.93 0.018 260);
-  --primary: oklch(0.88 0.18 124);
-  --primary-foreground: oklch(0.16 0.03 120);
+  --primary: oklch(0.9 0.23 142);
+  --primary-foreground: oklch(0.13 0.04 140);
   --secondary: oklch(0.21 0.022 260);
   --secondary-foreground: oklch(0.9 0.02 260);
   --muted: oklch(0.19 0.02 260);
   --muted-foreground: oklch(0.68 0.025 260);
   --accent: oklch(0.22 0.028 260);
   --accent-foreground: oklch(0.95 0.018 260);
-  --destructive: oklch(0.7 0.18 25);
+  --destructive: oklch(0.72 0.2 27);
   --input: oklch(0.25 0.025 260);
   --border: oklch(0.29 0.025 260);
-  --ring: oklch(0.78 0.12 124);
+  --ring: oklch(0.8 0.18 142);
   --radius: 0.25rem;
 
   --sidebar: oklch(0.145 0.02 260);
   --sidebar-foreground: oklch(0.91 0.018 260);
-  --sidebar-primary: oklch(0.88 0.18 124);
-  --sidebar-primary-foreground: oklch(0.16 0.03 120);
+  --sidebar-primary: oklch(0.9 0.23 142);
+  --sidebar-primary-foreground: oklch(0.13 0.04 140);
   --sidebar-accent: oklch(0.2 0.025 260);
   --sidebar-accent-foreground: oklch(0.95 0.018 260);
   --sidebar-border: oklch(0.25 0.025 260);
-  --sidebar-ring: oklch(0.78 0.12 124);
+  --sidebar-ring: oklch(0.8 0.18 142);
 
-  --status-success: oklch(0.82 0.18 124);
-  --status-success-soft: oklch(0.82 0.18 124 / 0.16);
-  --status-warning: oklch(0.82 0.15 85);
-  --status-failed: oklch(0.72 0.18 25);
+  --status-success: oklch(0.84 0.2 142);
+  --status-success-soft: oklch(0.84 0.2 142 / 0.16);
+  --status-warning: oklch(0.84 0.18 78);
+  --status-warning-soft: oklch(0.84 0.18 78 / 0.15);
+  --status-info: oklch(0.8 0.15 210);
+  --status-info-soft: oklch(0.8 0.15 210 / 0.14);
+  --status-failed: oklch(0.74 0.2 27);
+  --status-failed-soft: oklch(0.74 0.2 27 / 0.14);
 }
 
 @theme inline {
@@ -74,7 +78,11 @@
   --color-status-success: var(--status-success);
   --color-status-success-soft: var(--status-success-soft);
   --color-status-warning: var(--status-warning);
+  --color-status-warning-soft: var(--status-warning-soft);
+  --color-status-info: var(--status-info);
+  --color-status-info-soft: var(--status-info-soft);
   --color-status-failed: var(--status-failed);
+  --color-status-failed-soft: var(--status-failed-soft);
 }
 
 @layer base {

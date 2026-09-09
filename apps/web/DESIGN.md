@@ -22,8 +22,10 @@ The source of truth is src/index.css.
 - card and sidebar: slightly raised graphite surfaces.
 - border: cool, low-contrast rules.
 - foreground / muted-foreground: high-contrast heading and subdued utility text.
-- status-success: lime for active local/runtime states.
-- status-warning / status-failed: reserved for real delivery states.
+- status-success: electric green for active local/runtime states.
+- status-warning: warm amber for queued or cautionary delivery states.
+- status-info: cool cyan for neutral in-flight or informational states.
+- status-failed: restrained red for real delivery failures and errors.
 
 Use semantic Tailwind tokens such as bg-background, border-border, text-muted-foreground, and text-status-success. Do not introduce raw color utilities in product components.
 
