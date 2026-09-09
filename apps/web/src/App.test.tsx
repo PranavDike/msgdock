@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -45,7 +46,9 @@ describe('MsgDock message workspace', () => {
     fireEvent.click(messageRow);
 
     expect(
-      await screen.findByText('developer@example.com'),
+      await within(screen.getByRole('complementary')).findByText(
+        'developer@example.com',
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByText('This is a development email.'),

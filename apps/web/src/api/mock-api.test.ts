@@ -8,7 +8,7 @@ describe('createMockMessagesApi', () => {
 
     const response = await api.list({ channel: 'email' });
 
-    expect(response.data).toHaveLength(1);
+    expect(response.data).toHaveLength(4);
     expect(response.data[0]?.channel).toBe('email');
   });
 });
