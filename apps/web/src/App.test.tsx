@@ -96,6 +96,20 @@ describe('MsgDock message workspace', () => {
     );
   });
 
+  it('does not render the message inbox for providers or settings', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Providers' }));
+
+    expect(screen.queryByText('message stream')).not.toBeInTheDocument();
+    expect(screen.getByText('No providers configured')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+
+    expect(screen.queryByText('message stream')).not.toBeInTheDocument();
+    expect(screen.getByText('Nothing to configure yet')).toBeInTheDocument();
+  });
+
   it('shows an inspector error when the selected message is no longer available', async () => {
     const api = createApi({
       get: vi
