@@ -31,3 +31,6 @@ Thumbs.db
 # Temporary
 .tmp/
 .temp/
+
+# Local agent plans
+/docs/superpowers/
