@@ -1,0 +1,31 @@
+{
+  "name": "@msgdock/protocol-smtp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@msgdock/core": "0.1.0",
+    "mailparser": "^3.9.0",
+    "smtp-server": "^3.13.6"
+  },
+  "devDependencies": {
+    "@types/mailparser": "^3.4.6",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^7.0.4",
+    "@types/smtp-server": "^3.5.13",
+    "nodemailer": "^7.0.4"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  }
+}

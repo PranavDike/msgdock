@@ -1,5 +1,5 @@
 {
-  "name": "@msgdock/config",
+  "name": "@msgdock/core",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,6 +10,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
+  },
+  "dependencies": {
+    "@msgdock/contracts": "0.1.0"
   },
   "scripts": {
     "build": "tsc",

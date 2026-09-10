@@ -157,3 +157,39 @@ of availability.
 MsgDock is licensed under the Apache License 2.0.
 
 See [LICENSE](./LICENSE) for the full license text.
+
+## Run the local core runtime
+
+The first working runtime path captures real SMTP messages into SQLite and exposes them through the existing API client:
+
+```text
+Nodemailer → localhost:1430 → MsgDock Core → SQLite → localhost:6969/api/messages → Web UI
+```
+
+Start the runtime and UI in separate terminals:
+
+```bash
+npm run dev --workspace @msgdock/core-runtime
+npm run dev --workspace @msgdock/web
+```
+
+Defaults:
+
+- HTTP API: `localhost:6969`
+- SMTP ingestion: `localhost:1430`
+- SMS listener: disabled, reserved for `localhost:1431`
+- SQLite database: `.msgdock/msgdock.sqlite`
+
+Configuration is centralized in `packages/config` and can be overridden with `MSGDOCK_HTTP_HOST`, `MSGDOCK_HTTP_PORT`, `MSGDOCK_API_BASE_PATH`, `MSGDOCK_SMTP_HOST`, `MSGDOCK_SMTP_PORT`, `MSGDOCK_SMTP_ENABLED`, `MSGDOCK_SMTP_USER`, `MSGDOCK_SMTP_PASSWORD`, `MSGDOCK_SMS_HOST`, `MSGDOCK_SMS_PORT`, `MSGDOCK_SMS_ENABLED`, and `MSGDOCK_DATABASE_PATH`.
+
+Example Nodemailer configuration:
+
+```ts
+const transporter = nodemailer.createTransport({
+  host: 'localhost',
+  port: 1430,
+  auth: { user: 'msgdock', pass: 'msgdock' },
+});
+```
+
+See [runtime architecture](./docs/architecture/README.md) and the [HTTP API](./docs/api/README.md) for route and boundary details.

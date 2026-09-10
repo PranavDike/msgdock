@@ -1,79 +1,50 @@
-# MsgDock Architecture
+# MsgDock Runtime Architecture
 
-## Goal
-
-MsgDock provides a safe communication sandbox for local development and CI.
-
-Applications should be able to test communication workflows without
-contacting real users or external communication providers.
-
-## Core principles
-
-### 1. Channel and provider are separate
-
-A channel describes the communication medium:
-
-- Email
-- SMS
-
-A provider describes the underlying delivery implementation.
-
-The domain model must not couple a channel to a specific provider.
-
-### 2. Contracts are shared
-
-The API/domain contracts live in:
-
-`packages/contracts`
-
-The UI, API client, mocks, and future backend consume these contracts.
-
-### 3. UI does not own API models
-
-The UI communicates through:
-
-`packages/api-client`
-
-It does not import mock seed data directly.
-
-### 4. Transport is replaceable
-
-The API client exposes a transport boundary.
-
-Development:
-
-UI → API Client → Mock Transport
-
-Production:
-
-UI → API Client → HTTP Transport → Backend
-
-The UI should not need to change when switching transports.
-
-### 5. Mock data is deterministic
-
-Mock data exists for development and testing.
-
-Mock infrastructure must never contact real communication providers by default.
-
-## Initial architecture
+MsgDock Core is a local communication runtime. The backend is independent of React and the web workspace.
 
 ```text
-                    ┌──────────────┐
-                    │      Web     │
-                    └──────┬───────┘
-                           │
-                    ┌──────▼───────┐
-                    │  API Client  │
-                    └──────┬───────┘
-                           │
-                  ┌────────┴─────────┐
-                  │                  │
-           Mock Transport      HTTP Transport
-                  │                  │
-                  ▼                  ▼
-             Mock Service        Backend API
-                  │
-                  ▼
-             Mock Storage
+Application
+    │ SMTP
+    ▼
+SMTP adapter :1430
+    ▼
+MessageService
+    ├── MessageRepository → SQLite
+    └── EventBus → in-process lifecycle subscribers
+    ▼
+HTTP API :6969
+    ▼
+@msgdock/api-client → React UI
 ```
+
+The canonical message model is owned by the shared contracts and core service. Protocol adapters normalize into that model; they do not write to storage directly.
+
+## Packages
+
+- `packages/contracts` — API-facing `Message`, channel, status, and query types.
+- `packages/api-client` — `MessagesApi` and replaceable mock/HTTP transports.
+- `packages/config` — typed Node runtime configuration and environment overrides.
+- `packages/core` — infrastructure-agnostic message service, repository interface, and event boundary.
+- `packages/storage-sqlite` — SQLite repository implementation and schema initialization.
+- `packages/protocol-smtp` — SMTP listener and email parser adapter.
+- `apps/core` — process composition, HTTP routes, lifecycle, and CLI.
+- `apps/web` — React UI. Its normal runtime uses HTTP; tests can inject the mock API.
+
+## Lifecycle boundary
+
+The runtime currently publishes `message.created` through an in-process `EventBus` after successful persistence. The core does not depend on Redis, BullMQ, Kafka, or a worker system. Future simulation and callback consumers can subscribe at this boundary without coupling to SQLite or SMTP.
+
+## API mounting
+
+The HTTP handler takes a configurable base path. The local default is `/api`, producing `/api/health` and `/api/messages`. A future deployment can mount the same handler at `/messages` without a second API implementation.
+
+## Local development
+
+Run the runtime and web workspace in separate terminals:
+
+```bash
+npm run dev --workspace @msgdock/core-runtime
+npm run dev --workspace @msgdock/web
+```
+
+The Vite development server proxies `/api` to `http://localhost:6969`. The runtime stores its default database at `.msgdock/msgdock.sqlite`; that path is ignored by Git.

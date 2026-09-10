@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Message, MessagesApi } from '@msgdock/contracts';
 
+import { createMockMessagesApi } from './api/mock-api';
 import App from './App';
 
 afterEach(() => {
@@ -38,7 +39,7 @@ function createApi(overrides: Partial<MessagesApi> = {}): MessagesApi {
 
 describe('MsgDock message workspace', () => {
   it('renders messages from the configured API client and updates the inspector', async () => {
-    render(<App />);
+    render(<App api={createMockMessagesApi()} />);
 
     const messageRow = await screen.findByRole('button', {
       name: /Welcome to MsgDock/,
@@ -97,7 +98,7 @@ describe('MsgDock message workspace', () => {
   });
 
   it('does not render the message inbox for providers or settings', () => {
-    render(<App />);
+    render(<App api={createMockMessagesApi()} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Providers' }));
 

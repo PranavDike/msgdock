@@ -11,10 +11,22 @@
       "path": "./packages/api-client"
     },
     {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/storage-sqlite"
+    },
+    {
+      "path": "./packages/protocol-smtp"
+    },
+    {
       "path": "./mocks"
     },
     {
       "path": "./apps/web"
+    },
+    {
+      "path": "./apps/core"
     }
   ]
 }

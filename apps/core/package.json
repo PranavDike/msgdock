@@ -1,0 +1,32 @@
+{
+  "name": "@msgdock/core-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@msgdock/config": "0.1.0",
+    "@msgdock/contracts": "0.1.0",
+    "@msgdock/core": "0.1.0",
+    "@msgdock/protocol-smtp": "0.1.0",
+    "@msgdock/storage-sqlite": "0.1.0"
+  },
+  "devDependencies": {
+    "nodemailer": "^7.0.4",
+    "tsx": "^4.19.3"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js",
+    "build": "tsc",
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  }
+}
