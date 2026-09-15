@@ -8,7 +8,7 @@ import { useMessage, useMessages } from './use-message-data';
 const message = {
   id: 'msg_test',
   channel: 'email' as const,
-  provider: 'mock-email',
+  provider: 'test-email',
   status: 'delivered' as const,
   from: 'hello@msgdock.local',
   to: 'developer@example.com',

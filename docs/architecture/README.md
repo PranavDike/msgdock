@@ -20,7 +20,7 @@ HTTP application :6969
 ## Responsibilities
 
 - `packages/contracts` — API-facing message, channel, status, and query types.
-- `packages/api-client` — `MessagesApi` plus replaceable mock and HTTP transports.
+- `packages/api-client` — typed `MessagesApi` contracts and HTTP transport.
 - `packages/config` — typed Node runtime configuration and environment overrides.
 - `packages/core` — infrastructure-neutral message service, repository interface, and event boundary.
 - `packages/storage-sqlite` — SQLite repository and schema initialization.

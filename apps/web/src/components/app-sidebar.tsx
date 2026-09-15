@@ -88,7 +88,7 @@ export function AppSidebar({
               transport
             </p>
             <p className="mt-1 truncate text-xs text-sidebar-foreground/70">
-              mock service
+              HTTP transport
             </p>
           </div>
           <span className="size-1.5 shrink-0 rounded-full bg-status-success" />

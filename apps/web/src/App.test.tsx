@@ -19,7 +19,7 @@ afterEach(() => {
 const emailMessage: Message = {
   id: 'msg_test_email',
   channel: 'email',
-  provider: 'mock-email',
+  provider: 'test-email',
   status: 'delivered',
   from: 'hello@msgdock.local',
   to: 'developer@example.com',
