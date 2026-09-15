@@ -32,5 +32,8 @@ Thumbs.db
 .tmp/
 .temp/
 
+# MsgDock local runtime data
+.msgdock/
+
 # Local agent plans
 /docs/superpowers/
