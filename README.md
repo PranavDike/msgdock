@@ -51,7 +51,7 @@ Captured mail is stored locally in `.msgdock/msgdock.sqlite` by default. MsgDock
 Application → SMTP :1430 → MsgDock Core → SQLite → HTTP API :6969 → Web UI
 ```
 
-The Web UI uses the typed `@msgdock/api-client` boundary. It can use mock transport for isolated tests, or HTTP transport when the Core runtime is available.
+The Web UI uses the typed `@msgdock/api-client` boundary and HTTP transport when the Core runtime is available.
 
 The local API is mounted at `/api` by default, for example `http://localhost:6969/api/messages`. The same API handler can also be mounted at a host root (for example, `https://api.msgdock.dev/messages`) without duplicating contracts or service behavior.
 

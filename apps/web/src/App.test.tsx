@@ -10,7 +10,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Message, MessagesApi } from '@msgdock/contracts';
 
-import { createMockMessagesApi } from './api/mock-api';
 import App from './App';
 
 afterEach(() => {
@@ -29,6 +28,17 @@ const emailMessage: Message = {
   createdAt: '2026-09-02T09:00:00.000Z',
 };
 
+const workspaceMessage: Message = {
+  id: 'msg_workspace_email',
+  channel: 'email',
+  provider: 'smtp',
+  status: 'delivered',
+  from: 'hello@example.com',
+  to: 'developer@example.com',
+  subject: 'Welcome to MsgDock',
+  body: 'This is a development email.',
+  createdAt: '2026-09-02T09:05:00.000Z',
+};
 function createApi(overrides: Partial<MessagesApi> = {}): MessagesApi {
   return {
     list: vi.fn().mockResolvedValue({ data: [emailMessage] }),
@@ -39,7 +49,11 @@ function createApi(overrides: Partial<MessagesApi> = {}): MessagesApi {
 
 describe('MsgDock message workspace', () => {
   it('renders messages from the configured API client and updates the inspector', async () => {
-    render(<App api={createMockMessagesApi()} />);
+    const api = createApi({
+      list: vi.fn().mockResolvedValue({ data: [workspaceMessage] }),
+      get: vi.fn().mockResolvedValue({ data: workspaceMessage }),
+    });
+    render(<App api={api} />);
 
     const messageRow = await screen.findByRole('button', {
       name: /Welcome to MsgDock/,
@@ -98,7 +112,7 @@ describe('MsgDock message workspace', () => {
   });
 
   it('does not render the message inbox for providers or settings', () => {
-    render(<App api={createMockMessagesApi()} />);
+    render(<App api={createApi()} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Providers' }));
 

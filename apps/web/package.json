@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@msgdock/api-client": "0.1.0",
-    "@msgdock/mocks": "0.1.0",
     "@base-ui/react": "^1.8.0",
     "@fontsource-variable/geist": "^5.3.0",
     "class-variance-authority": "^0.7.1",

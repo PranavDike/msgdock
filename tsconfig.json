@@ -20,9 +20,6 @@
       "path": "./packages/protocol-smtp"
     },
     {
-      "path": "./mocks"
-    },
-    {
       "path": "./apps/web"
     },
     {

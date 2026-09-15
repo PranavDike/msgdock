@@ -6,8 +6,7 @@
   "description": "Provider-aware communication sandbox for local development and CI.",
   "workspaces": [
     "apps/*",
-    "packages/*",
-    "mocks"
+    "packages/*"
   ],
   "scripts": {
     "dev": "node scripts/dev.mjs",

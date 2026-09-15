@@ -26,6 +26,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "references": [{ "path": "../../mocks" }],
   "include": ["src"]
 }

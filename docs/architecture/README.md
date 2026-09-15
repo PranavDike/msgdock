@@ -26,7 +26,7 @@ HTTP application :6969
 - `packages/storage-sqlite` — SQLite repository and schema initialization.
 - `packages/protocol-smtp` — SMTP listener and email parser adapter.
 - `apps/core` — runtime composition, HTTP application handler, API routes, lifecycle, and CLI.
-- `apps/web` — React UI; it uses HTTP in normal runtime and can receive mock APIs in tests.
+- `apps/web` — React UI using the typed API client and HTTP transport.
 
 ## HTTP application routing
 
