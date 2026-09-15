@@ -31,3 +31,9 @@ Thumbs.db
 # Temporary
 .tmp/
 .temp/
+
+# MsgDock local runtime data
+.msgdock/
+
+# Local agent plans
+/docs/superpowers/

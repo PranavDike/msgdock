@@ -3,7 +3,6 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -11,22 +10,13 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-
     "composite": true,
     "rootDir": "src",
     "outDir": "dist"
   },
   "include": ["src"],
-  "references": [
-    {
-      "path": "../packages/contracts"
-    },
-    {
-      "path": "../packages/api-client"
-    }
-  ]
+  "references": [{ "path": "../contracts" }]
 }

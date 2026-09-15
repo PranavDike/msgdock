@@ -1,0 +1,27 @@
+{
+  "name": "@msgdock/storage-sqlite",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@msgdock/contracts": "0.1.0",
+    "@msgdock/core": "0.1.0",
+    "better-sqlite3": "^12.4.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  }
+}
