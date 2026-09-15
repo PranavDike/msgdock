@@ -1,6 +1,6 @@
 # MsgDock Runtime Architecture
 
-MsgDock Core is a local communication runtime. The backend is independent of React and the web workspace.
+MsgDock Core is independent of React and the Web workspace.
 
 ```text
 Application
@@ -12,39 +12,43 @@ MessageService
     ├── MessageRepository → SQLite
     └── EventBus → in-process lifecycle subscribers
     ▼
-HTTP API :6969
-    ▼
-@msgdock/api-client → React UI
+HTTP application :6969
+    ├── API handler
+    └── built Web UI
 ```
 
-The canonical message model is owned by the shared contracts and core service. Protocol adapters normalize into that model; they do not write to storage directly.
+## Responsibilities
 
-## Packages
-
-- `packages/contracts` — API-facing `Message`, channel, status, and query types.
-- `packages/api-client` — `MessagesApi` and replaceable mock/HTTP transports.
+- `packages/contracts` — API-facing message, channel, status, and query types.
+- `packages/api-client` — `MessagesApi` plus replaceable mock and HTTP transports.
 - `packages/config` — typed Node runtime configuration and environment overrides.
-- `packages/core` — infrastructure-agnostic message service, repository interface, and event boundary.
-- `packages/storage-sqlite` — SQLite repository implementation and schema initialization.
+- `packages/core` — infrastructure-neutral message service, repository interface, and event boundary.
+- `packages/storage-sqlite` — SQLite repository and schema initialization.
 - `packages/protocol-smtp` — SMTP listener and email parser adapter.
-- `apps/core` — process composition, HTTP routes, lifecycle, and CLI.
-- `apps/web` — React UI. Its normal runtime uses HTTP; tests can inject the mock API.
+- `apps/core` — runtime composition, HTTP application handler, API routes, lifecycle, and CLI.
+- `apps/web` — React UI; it uses HTTP in normal runtime and can receive mock APIs in tests.
 
-## Lifecycle boundary
+## HTTP application routing
 
-The runtime currently publishes `message.created` through an in-process `EventBus` after successful persistence. The core does not depend on Redis, BullMQ, Kafka, or a worker system. Future simulation and callback consumers can subscribe at this boundary without coupling to SQLite or SMTP.
+The HTTP application composes a single API handler with static hosting:
+
+1. API mount matches are handled by the API handler.
+2. Existing files under the built Web distribution are served as static assets.
+3. Non-asset browser routes fall back to `index.html` for SPA routing.
+4. Missing assets return `404`; API routes never fall back to the SPA.
+
+The static root is an internal runtime concern. The default resolves to `apps/web/dist` relative to the runtime module, so `npm start` works regardless of npm workspace working-directory behavior.
 
 ## API mounting
 
-The HTTP handler takes a configurable base path. The local default is `/api`, producing `/api/health` and `/api/messages`. A future deployment can mount the same handler at `/messages` without a second API implementation.
+The API handler has a configurable mount path. The local default is `/api`, yielding `/api/health` and `/api/messages` on `localhost:6969`.
 
-## Local development
+The same handler can be mounted at a host root for an API domain, yielding routes such as `api.msgdock.dev/messages`. This is routing composition only: API contracts, handler behavior, and services remain the same.
 
-Run the runtime and web workspace in separate terminals:
+## Lifecycle boundary
 
-```bash
-npm run dev --workspace @msgdock/core-runtime
-npm run dev --workspace @msgdock/web
-```
+The runtime publishes `message.created` through an in-process `EventBus` after successful persistence. The core does not depend on Redis, BullMQ, Kafka, or worker infrastructure. Future simulation and callback consumers can subscribe at this boundary without coupling to SQLite or SMTP.
 
-The Vite development server proxies `/api` to `http://localhost:6969`. The runtime stores its default database at `.msgdock/msgdock.sqlite`; that path is ignored by Git.
+## Development
+
+`npm run dev` starts Core on `:6969` and Vite on `:5173`. Vite proxies `/api` to Core. The default database is `.msgdock/msgdock.sqlite`, which is ignored by Git.

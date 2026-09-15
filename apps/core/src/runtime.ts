@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { AddressInfo } from 'node:net';
 
 import type { MsgDockConfig } from '@msgdock/config';
@@ -7,7 +9,16 @@ import { SmtpServerAdapter } from '@msgdock/protocol-smtp';
 import { SQLiteMessageRepository } from '@msgdock/storage-sqlite';
 
 import { createApiHandler } from './api-handler.js';
+import {
+  createApplicationHandler,
+  type ApiMount,
+} from './application-handler.js';
 import { HttpServer } from './http-server.js';
+
+export interface CoreRuntimeOptions {
+  apiHost?: string;
+  staticRoot?: string;
+}
 
 export interface CoreRuntime {
   start(): Promise<void>;
@@ -16,15 +27,39 @@ export interface CoreRuntime {
   smtpAddress(): AddressInfo | null;
 }
 
-export function createRuntime(config: MsgDockConfig): CoreRuntime {
+export function createRuntime(
+  config: MsgDockConfig,
+  options: CoreRuntimeOptions = {},
+): CoreRuntime {
   const repository = new SQLiteMessageRepository(config.database.path);
   const eventBus = new InProcessEventBus();
   const messageService = new MessageService(repository, eventBus, {
     idGenerator: () => randomUUID(),
     clock: () => new Date(),
   });
+  const localApiHandler = createApiHandler(
+    messageService,
+    config.http.basePath,
+  );
+  const apiMounts: ApiMount[] = [
+    { path: config.http.basePath, handler: localApiHandler },
+  ];
+
+  if (options.apiHost) {
+    apiMounts.push({
+      host: options.apiHost,
+      path: '/',
+      handler: createApiHandler(messageService, ''),
+    });
+  }
+
   const httpServer = new HttpServer(
-    createApiHandler(messageService, config.http.basePath),
+    createApplicationHandler({
+      apiMounts,
+      staticRoot:
+        options.staticRoot ??
+        resolve(dirname(fileURLToPath(import.meta.url)), '../../web/dist'),
+    }),
     config.http,
   );
   const smtpServer = config.smtp.enabled

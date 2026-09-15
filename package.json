@@ -10,7 +10,9 @@
     "mocks"
   ],
   "scripts": {
-    "build": "tsc -b",
+    "dev": "node scripts/dev.mjs",
+    "start": "node apps/core/dist/cli.js",
+    "build": "tsc -b --force && npm run build:client --workspace @msgdock/web",
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
