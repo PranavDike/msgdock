@@ -43,6 +43,7 @@ function createApi(overrides: Partial<MessagesApi> = {}): MessagesApi {
   return {
     list: vi.fn().mockResolvedValue({ data: [emailMessage] }),
     get: vi.fn().mockResolvedValue({ data: emailMessage }),
+    subscribe: vi.fn(() => () => {}),
     ...overrides,
   };
 }

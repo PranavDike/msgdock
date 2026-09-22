@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Message } from '@msgdock/contracts';
-import { MessageNotFoundError } from '@msgdock/core';
+import { InProcessEventBus, MessageNotFoundError } from '@msgdock/core';
 import type { MessageService } from '@msgdock/core';
 
 import { createApiHandler } from './api-handler.js';
@@ -100,5 +100,78 @@ describe('HTTP API handler', () => {
     await expect(response.json()).resolves.toEqual({
       error: { code: 'not_found', message: 'Message not found: missing' },
     });
+  });
+  it('streams newly created messages through server-sent events', async () => {
+    const service = {
+      list: vi.fn(),
+      get: vi.fn(),
+    } as unknown as Pick<MessageService, 'list' | 'get'>;
+    const eventBus = new InProcessEventBus();
+
+    const server = createServer(
+      createApiHandler(service, '/api', { eventBus }),
+    );
+    servers.push(server);
+
+    await new Promise<void>((resolve) =>
+      server.listen(0, '127.0.0.1', resolve),
+    );
+
+    const address = server.address();
+
+    if (!address || typeof address === 'string') {
+      throw new Error('No server address');
+    }
+
+    const response = await fetch(
+      `http://127.0.0.1:${address.port}/api/messages/stream`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe(
+      'text/event-stream; charset=utf-8',
+    );
+
+    if (!response.body) {
+      throw new Error('SSE response has no body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    const readEvent = async (): Promise<string> => {
+      let buffer = '';
+
+      while (!buffer.includes('\n\n')) {
+        const result = await reader.read();
+
+        if (result.done) {
+          throw new Error('SSE stream closed before receiving an event');
+        }
+
+        buffer += decoder.decode(result.value, { stream: true });
+      }
+
+      return buffer;
+    };
+
+    await eventBus.publish({
+      type: 'message.created',
+      message: sampleMessage,
+      occurredAt: sampleMessage.createdAt,
+    });
+
+    const event = await readEvent();
+
+    expect(event).toContain('event: message.created');
+    expect(event).toContain(
+      `data: ${JSON.stringify({
+        type: 'message.created',
+        message: sampleMessage,
+        occurredAt: sampleMessage.createdAt,
+      })}`,
+    );
+
+    await reader.cancel();
   });
 });

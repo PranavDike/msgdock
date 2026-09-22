@@ -2,6 +2,8 @@ import type {
   GetMessageResponse,
   ListMessagesQuery,
   ListMessagesResponse,
+  MessageCreatedEvent,
+  MessageEventHandler,
   MessagesApi,
 } from '@msgdock/contracts';
 
@@ -9,6 +11,11 @@ export interface MessageTransport {
   listMessages(query?: ListMessagesQuery): Promise<ListMessagesResponse>;
 
   getMessage(id: string): Promise<GetMessageResponse>;
+
+  subscribe(
+    type: 'message.created',
+    handler: MessageEventHandler<'message.created'>,
+  ): () => void;
 }
 
 function buildUrl(baseUrl: string, path: string): string {
@@ -92,6 +99,34 @@ export class HttpMessageTransport implements MessageTransport {
 
     return readResponse<GetMessageResponse>(response, requestUrl);
   }
+
+  subscribe(
+    type: 'message.created',
+    handler: MessageEventHandler<'message.created'>,
+  ): () => void {
+    if (typeof EventSource === 'undefined') {
+      throw new Error('EventSource is not available in this environment');
+    }
+
+    const requestUrl = buildUrl(this.baseUrl, '/messages/stream');
+    const source = new EventSource(requestUrl);
+
+    const handleMessageCreated = (event: globalThis.MessageEvent) => {
+      if (typeof event.data !== 'string') {
+        throw new Error('Invalid message.created event payload');
+      }
+
+      const payload = JSON.parse(event.data) as MessageCreatedEvent;
+      handler(payload);
+    };
+
+    source.addEventListener(type, handleMessageCreated);
+
+    return () => {
+      source.removeEventListener(type, handleMessageCreated);
+      source.close();
+    };
+  }
 }
 
 export class MsgDockApiClient implements MessagesApi {
@@ -103,5 +138,12 @@ export class MsgDockApiClient implements MessagesApi {
 
   get(id: string): Promise<GetMessageResponse> {
     return this.transport.getMessage(id);
+  }
+
+  subscribe(
+    type: 'message.created',
+    handler: MessageEventHandler<'message.created'>,
+  ): () => void {
+    return this.transport.subscribe(type, handler);
   }
 }

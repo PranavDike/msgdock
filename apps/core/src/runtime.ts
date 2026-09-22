@@ -40,6 +40,7 @@ export function createRuntime(
   const localApiHandler = createApiHandler(
     messageService,
     config.http.basePath,
+    { eventBus },
   );
   const apiMounts: ApiMount[] = [
     { path: config.http.basePath, handler: localApiHandler },
@@ -49,7 +50,7 @@ export function createRuntime(
     apiMounts.push({
       host: options.apiHost,
       path: '/',
-      handler: createApiHandler(messageService, ''),
+      handler: createApiHandler(messageService, '', { eventBus }),
     });
   }
 

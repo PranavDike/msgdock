@@ -10,7 +10,7 @@ import {
   MessageValidationError,
   UnsupportedQueryError,
 } from '@msgdock/core';
-import type { MessageService } from '@msgdock/core';
+import type { EventBus, MessageService } from '@msgdock/core';
 
 interface ErrorPayload {
   error: {
@@ -20,6 +20,9 @@ interface ErrorPayload {
 }
 
 type MessageServicePort = Pick<MessageService, 'list' | 'get'>;
+interface ApiHandlerOptions {
+  eventBus?: EventBus;
+}
 
 const channels = new Set<Channel>(['email', 'sms']);
 const statuses = new Set<MessageStatus>([
@@ -143,9 +146,27 @@ function errorResponse(error: unknown): {
   };
 }
 
+function sendSseHeaders(response: ServerResponse): void {
+  response.statusCode = 200;
+  response.setHeader('content-type', 'text/event-stream; charset=utf-8');
+  response.setHeader('cache-control', 'no-cache');
+  response.setHeader('connection', 'keep-alive');
+  response.flushHeaders();
+}
+
+function writeSseEvent(
+  response: ServerResponse,
+  event: string,
+  data: unknown,
+): void {
+  response.write(`event: ${event}\n`);
+  response.write(`data: ${JSON.stringify(data)}\n\n`);
+}
+
 export function createApiHandler(
   service: MessageServicePort,
   basePath = '/api',
+  options: ApiHandlerOptions = {},
 ): (request: IncomingMessage, response: ServerResponse) => void {
   const normalizedBasePath = normalizeBasePath(basePath);
 
@@ -171,6 +192,32 @@ export function createApiHandler(
       try {
         if (route === '/health') {
           sendJson(response, 200, { status: 'ok', service: 'msgdock-core' });
+          return;
+        }
+
+        if (route === '/messages/stream') {
+          if (!options.eventBus) {
+            sendJson(response, 404, {
+              error: { code: 'not_found', message: 'Route not found' },
+            });
+            return;
+          }
+
+          sendSseHeaders(response);
+
+          const unsubscribe = options.eventBus.subscribe(
+            'message.created',
+            (event) => {
+              if (response.writableEnded) {
+                unsubscribe();
+                return;
+              }
+
+              writeSseEvent(response, event.type, event);
+            },
+          );
+
+          request.on('close', unsubscribe);
           return;
         }
 
