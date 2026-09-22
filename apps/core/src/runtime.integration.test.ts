@@ -1,3 +1,7 @@
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import nodemailer from 'nodemailer';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -5,10 +9,14 @@ import type { MsgDockConfig } from '@msgdock/config';
 
 import { createRuntime, type CoreRuntime } from './runtime.js';
 
-function testConfig(): MsgDockConfig {
+function testConfig(databasePath = ':memory:'): MsgDockConfig {
   return {
     environment: 'test',
-    http: { host: '127.0.0.1', port: 0, basePath: '/api' },
+    http: {
+      host: '127.0.0.1',
+      port: 0,
+      basePath: '/api',
+    },
     smtp: {
       enabled: true,
       host: '127.0.0.1',
@@ -16,12 +24,64 @@ function testConfig(): MsgDockConfig {
       username: 'msgdock',
       password: 'msgdock',
     },
-    sms: { enabled: false, host: '127.0.0.1', port: 0 },
-    database: { path: ':memory:' },
+    sms: {
+      enabled: false,
+      host: '127.0.0.1',
+      port: 0,
+    },
+    database: {
+      path: databasePath,
+    },
   };
 }
 
-describe('core runtime', () => {
+async function sendTestEmail(runtime: CoreRuntime): Promise<void> {
+  const smtpAddress = runtime.smtpAddress();
+
+  if (!smtpAddress) {
+    throw new Error('SMTP server did not start');
+  }
+
+  const transport = nodemailer.createTransport({
+    host: '127.0.0.1',
+    port: smtpAddress.port,
+    auth: {
+      user: 'msgdock',
+      pass: 'msgdock',
+    },
+  });
+
+  await transport.sendMail({
+    from: 'hello@example.com',
+    to: 'developer@example.com',
+    subject: 'Runtime integration test',
+    text: 'Captured end to end.',
+  });
+}
+
+async function getMessages(
+  runtime: CoreRuntime,
+): Promise<Array<Record<string, unknown>>> {
+  const httpAddress = runtime.httpAddress();
+
+  if (!httpAddress) {
+    throw new Error('HTTP server did not start');
+  }
+
+  const response = await fetch(
+    `http://127.0.0.1:${httpAddress.port}/api/messages`,
+  );
+
+  expect(response.status).toBe(200);
+
+  const payload = (await response.json()) as {
+    data: Array<Record<string, unknown>>;
+  };
+
+  return payload.data;
+}
+
+describe('core runtime integration', () => {
   const runtimes: CoreRuntime[] = [];
 
   afterEach(async () => {
@@ -31,41 +91,128 @@ describe('core runtime', () => {
   it('captures SMTP into SQLite and returns it through HTTP', async () => {
     const runtime = createRuntime(testConfig());
     runtimes.push(runtime);
+
     await runtime.start();
 
-    const httpAddress = runtime.httpAddress();
-    const smtpAddress = runtime.smtpAddress();
-    if (!httpAddress || !smtpAddress) throw new Error('Runtime did not start');
+    await sendTestEmail(runtime);
 
-    const transport = nodemailer.createTransport({
-      host: '127.0.0.1',
-      port: smtpAddress.port,
-      auth: { user: 'msgdock', pass: 'msgdock' },
-    });
-    await transport.sendMail({
-      from: 'hello@example.com',
-      to: 'developer@example.com',
-      subject: 'Runtime acceptance test',
-      text: 'Captured end to end.',
-    });
+    const messages = await getMessages(runtime);
 
-    const response = await fetch(
-      `http://127.0.0.1:${httpAddress.port}/api/messages`,
-    );
-    const payload = (await response.json()) as {
-      data: Array<Record<string, unknown>>;
-    };
+    expect(messages).toHaveLength(1);
 
-    expect(response.status).toBe(200);
-    expect(payload.data).toHaveLength(1);
-    expect(payload.data[0]).toMatchObject({
+    expect(messages[0]).toMatchObject({
       channel: 'email',
       provider: 'smtp',
       status: 'queued',
       from: 'hello@example.com',
       to: 'developer@example.com',
-      subject: 'Runtime acceptance test',
+      subject: 'Runtime integration test',
       body: 'Captured end to end.',
     });
+  }, 15_000);
+
+  it('returns captured message details through the HTTP API', async () => {
+    const runtime = createRuntime(testConfig());
+    runtimes.push(runtime);
+
+    await runtime.start();
+
+    await sendTestEmail(runtime);
+
+    const messages = await getMessages(runtime);
+
+    expect(messages).toHaveLength(1);
+
+    const messageId = messages[0]?.id;
+
+    expect(typeof messageId).toBe('string');
+
+    const httpAddress = runtime.httpAddress();
+
+    if (!httpAddress) {
+      throw new Error('HTTP server did not start');
+    }
+
+    const response = await fetch(
+      `http://127.0.0.1:${httpAddress.port}/api/messages/${encodeURIComponent(
+        String(messageId),
+      )}`,
+    );
+
+    expect(response.status).toBe(200);
+
+    const payload = (await response.json()) as {
+      data: Record<string, unknown>;
+    };
+
+    expect(payload.data).toMatchObject({
+      id: messageId,
+      channel: 'email',
+      provider: 'smtp',
+      status: 'queued',
+      from: 'hello@example.com',
+      to: 'developer@example.com',
+      subject: 'Runtime integration test',
+      body: 'Captured end to end.',
+    });
+  }, 15_000);
+
+  it('persists captured messages across runtime restarts', async () => {
+    const tempDirectory = await mkdtemp(join(tmpdir(), 'msgdock-integration-'));
+    const databasePath = join(tempDirectory, 'msgdock.sqlite');
+
+    let firstRuntime: CoreRuntime | undefined;
+    let secondRuntime: CoreRuntime | undefined;
+
+    try {
+      firstRuntime = createRuntime(testConfig(databasePath));
+
+      await firstRuntime.start();
+
+      await sendTestEmail(firstRuntime);
+
+      const messagesBeforeRestart = await getMessages(firstRuntime);
+
+      expect(messagesBeforeRestart).toHaveLength(1);
+
+      const messageId = messagesBeforeRestart[0]?.id;
+
+      expect(typeof messageId).toBe('string');
+
+      await firstRuntime.stop();
+      firstRuntime = undefined;
+
+      secondRuntime = createRuntime(testConfig(databasePath));
+
+      await secondRuntime.start();
+
+      const messagesAfterRestart = await getMessages(secondRuntime);
+
+      expect(messagesAfterRestart).toHaveLength(1);
+
+      expect(messagesAfterRestart[0]).toMatchObject({
+        id: messageId,
+        channel: 'email',
+        provider: 'smtp',
+        status: 'queued',
+        from: 'hello@example.com',
+        to: 'developer@example.com',
+        subject: 'Runtime integration test',
+        body: 'Captured end to end.',
+      });
+    } finally {
+      if (firstRuntime) {
+        await firstRuntime.stop();
+      }
+
+      if (secondRuntime) {
+        await secondRuntime.stop();
+      }
+
+      await rm(tempDirectory, {
+        recursive: true,
+        force: true,
+      });
+    }
   }, 15_000);
 });
