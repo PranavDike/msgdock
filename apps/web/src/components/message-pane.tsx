@@ -5,9 +5,10 @@ import type {
   ListMessagesQuery,
 } from '@msgdock/contracts';
 
-import { Inbox } from 'lucide-react';
+import { Inbox, RefreshCw } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Empty,
   EmptyDescription,
@@ -31,6 +32,7 @@ interface MessagePaneProps {
   onFilterChange: (query: ListMessagesQuery) => void;
   onResetFilters: () => void;
   onSelect: (id: string) => void;
+  onRefresh: () => void;
 }
 
 function MessageLoading() {
@@ -64,6 +66,7 @@ export function MessagePane({
   onFilterChange,
   onResetFilters,
   onSelect,
+  onRefresh,
 }: MessagePaneProps) {
   return (
     <section
@@ -77,9 +80,25 @@ export function MessagePane({
         >
           message stream
         </h2>
-        <span className="font-mono text-[0.62rem] text-muted-foreground/45">
-          {isLoading ? 'querying' : `${messages.length} visible`}
-        </span>
+
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5 px-2 font-mono text-[0.62rem] text-muted-foreground"
+            onClick={onRefresh}
+            disabled={isLoading}
+            aria-label="Refresh messages"
+          >
+            <RefreshCw aria-hidden="true" className="size-3" />
+            refresh
+          </Button>
+
+          <span className="font-mono text-[0.62rem] text-muted-foreground/45">
+            {isLoading ? 'querying' : `${messages.length} visible`}
+          </span>
+        </div>
       </div>
 
       <MessageFilters
