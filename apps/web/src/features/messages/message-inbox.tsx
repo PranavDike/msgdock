@@ -70,6 +70,7 @@ export function MessageInbox({ activeSection, api }: MessageInboxProps) {
         provider={provider}
         onFilterChange={updateFilters}
         onResetFilters={resetFilters}
+        onRefresh={messagesState.refresh}
         onSelect={setSelectedId}
       />
       <DetailsPane

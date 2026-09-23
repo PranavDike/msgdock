@@ -19,12 +19,13 @@ function toError(error: unknown) {
 export function useMessages(
   api: MessagesApi,
   query: ListMessagesQuery,
-): AsyncState<Message[]> {
+): AsyncState<Message[]> & { refresh: () => void } {
   const [state, setState] = useState<AsyncState<Message[]>>({
     data: [],
     error: null,
     isLoading: true,
   });
+  const [refreshKey, setRefreshKey] = useState(0);
   const queryKey = JSON.stringify(query);
 
   useEffect(() => {
@@ -43,12 +44,35 @@ export function useMessages(
         setState({ data: [], error: toError(error), isLoading: false });
       });
 
+    const unsubscribe = api.subscribe('message.created', (event) => {
+      if (cancelled) return;
+
+      setState((current) => {
+        const exists = current.data.some(
+          (message) => message.id === event.message.id,
+        );
+
+        if (exists) {
+          return current;
+        }
+
+        return {
+          ...current,
+          data: [event.message, ...current.data],
+        };
+      });
+    });
+
     return () => {
       cancelled = true;
+      unsubscribe();
     };
-  }, [api, queryKey]);
+  }, [api, queryKey, refreshKey]);
 
-  return state;
+  return {
+    ...state,
+    refresh: () => setRefreshKey((current) => current + 1),
+  };
 }
 
 export function useMessage(

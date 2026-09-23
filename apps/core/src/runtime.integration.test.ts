@@ -81,6 +81,30 @@ async function getMessages(
   return payload.data;
 }
 
+async function readSseEvent(response: Response): Promise<string> {
+  if (!response.body) {
+    throw new Error('SSE response has no body');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (!buffer.includes('\n\n')) {
+    const result = await reader.read();
+
+    if (result.done) {
+      throw new Error('SSE stream closed before receiving an event');
+    }
+
+    buffer += decoder.decode(result.value, { stream: true });
+  }
+
+  await reader.cancel();
+
+  return buffer;
+}
+
 describe('core runtime integration', () => {
   const runtimes: CoreRuntime[] = [];
 
@@ -214,5 +238,60 @@ describe('core runtime integration', () => {
         force: true,
       });
     }
+  }, 15_000);
+
+  it('streams captured SMTP messages through server-sent events', async () => {
+    const runtime = createRuntime(testConfig());
+    runtimes.push(runtime);
+
+    await runtime.start();
+
+    const httpAddress = runtime.httpAddress();
+
+    if (!httpAddress) {
+      throw new Error('HTTP server did not start');
+    }
+
+    const response = await fetch(
+      `http://127.0.0.1:${httpAddress.port}/api/messages/stream`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe(
+      'text/event-stream; charset=utf-8',
+    );
+
+    const eventPromise = readSseEvent(response);
+
+    await sendTestEmail(runtime);
+
+    const event = await eventPromise;
+
+    expect(event).toContain('event: message.created');
+
+    const dataLine = event
+      .split('\n')
+      .find((line) => line.startsWith('data: '));
+
+    expect(dataLine).toBeDefined();
+
+    const payload = JSON.parse(dataLine!.slice('data: '.length)) as {
+      type: string;
+      message: Record<string, unknown>;
+      occurredAt: string;
+    };
+
+    expect(payload.type).toBe('message.created');
+    expect(payload.message).toMatchObject({
+      channel: 'email',
+      provider: 'smtp',
+      status: 'queued',
+      from: 'hello@example.com',
+      to: 'developer@example.com',
+      subject: 'Runtime integration test',
+      body: 'Captured end to end.',
+    });
+    expect(typeof payload.message.id).toBe('string');
+    expect(typeof payload.occurredAt).toBe('string');
   }, 15_000);
 });
