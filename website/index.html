@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MsgDock is a provider-aware communication sandbox for local development and CI.">
+  <title>MsgDock — Local communication sandbox</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="./" aria-label="MsgDock home">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <span>msgdock</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#quick-start">Quick start</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#api">API</a>
+        <a href="#faq">FAQ</a>
+        <a class="header-link" href="https://github.com/PranavDike/msgdock">GitHub ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow">LOCAL DEV / COMMUNICATIONS</p>
+        <h1>See what your app sends.<br><em>Keep it local.</em></h1>
+        <p class="lede">MsgDock is an open-source, provider-aware communication sandbox for local development and CI. Capture email and SMS locally, inspect the messages, and keep real users and external providers out of the loop.</p>
+        <div class="actions">
+          <a class="button primary" href="#quick-start">Get started <span>↓</span></a>
+          <a class="button secondary" href="https://github.com/PranavDike/msgdock">View source ↗</a>
+        </div>
+      </div>
+      <div class="runtime-panel" aria-label="Local runtime endpoints">
+        <div class="panel-top">
+          <span>MSGDOCK / LOCAL</span>
+          <span class="live-dot">● running locally</span>
+        </div>
+        <div class="terminal">
+          <div><span class="prompt">$</span> npm run dev</div>
+          <div class="terminal-dim">starting local runtime...</div>
+          <div class="terminal-row"><span>WEB</span><code>localhost:5173</code></div>
+          <div class="terminal-row"><span>API</span><code>localhost:6969/api</code></div>
+          <div class="terminal-row"><span>SMTP</span><code>localhost:1430</code></div>
+          <div class="terminal-row"><span>SMS</span><code>localhost:1431</code><small>opt-in</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="status-strip">
+      <div class="shell status-grid">
+        <div><span>01</span><strong>Capture</strong><small>SMTP + local HTTP</small></div>
+        <div><span>02</span><strong>Persist</strong><small>SQLite, locally</small></div>
+        <div><span>03</span><strong>Inspect</strong><small>Typed HTTP API + UI</small></div>
+        <div><span>04</span><strong>Develop</strong><small>Built for CI workflows</small></div>
+      </div>
+    </section>
+
+    <section class="section shell" id="quick-start">
+      <div class="section-heading">
+        <p class="eyebrow">01 / QUICK START</p>
+        <h2>Point your app at MsgDock.</h2>
+        <p>There is no MsgDock-specific SDK required for basic capture. Change your local transport configuration and keep your application code intact.</p>
+      </div>
+      <div class="code-grid">
+        <article class="code-card">
+          <div class="code-head"><span>Install + run</span><button class="copy" data-copy="npm install
+npm run dev">copy</button></div>
+          <pre><code>npm install
+npm run dev</code></pre>
+          <p>Requires Node.js 20+ and npm. The development command starts the Web UI and Core runtime together.</p>
+        </article>
+        <article class="code-card">
+          <div class="code-head"><span>Nodemailer</span><button class="copy" data-copy="const transporter = nodemailer.createTransport({
+  host: 'localhost',
+  port: 1430,
+  auth: { user: 'msgdock', pass: 'msgdock' },
+});">copy</button></div>
+          <pre><code>const transporter = nodemailer.createTransport({
+  host: 'localhost',
+  port: 1430,
+  auth: { user: 'msgdock', pass: 'msgdock' },
+});</code></pre>
+          <p>Captured email is stored locally. MsgDock does not deliver captured mail externally.</p>
+        </article>
+      </div>
+      <div class="note"><span>i</span><p>Local data is stored in <code>.msgdock/msgdock.sqlite</code> by default. SMS capture is opt-in: <code>MSGDOCK_SMS_ENABLED=true npm run dev</code>.</p></div>
+    </section>
+
+    <section class="section section-dark" id="architecture">
+      <div class="shell">
+        <div class="section-heading split">
+          <div><p class="eyebrow">02 / ARCHITECTURE</p><h2>Small boundaries.<br>Clear responsibilities.</h2></div>
+          <p>MsgDock keeps protocol adapters, domain logic, persistence, API transport, and the UI separate so the local runtime can grow without turning into a distributed system.</p>
+        </div>
+        <div class="flow">
+          <div class="flow-node source"><span>APPLICATION</span><strong>your app</strong></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><span>PROTOCOL</span><strong>SMTP :1430</strong><small>or SMS :1431</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node accent"><span>CORE</span><strong>MessageService</strong><small>validation + events</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><span>STORAGE</span><strong>SQLite</strong><small>local persistence</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node"><span>HTTP :6969</span><strong>API + Web UI</strong><small>inspect messages</small></div>
+        </div>
+        <div class="architecture-foot">
+          <div><span>EVENT BOUNDARY</span><strong>In-process EventBus</strong><p>Lifecycle events stay inside the runtime today. Future consumers can attach without coupling the core to queues or external infrastructure.</p></div>
+          <div><span>DEPENDENCY RULE</span><strong>Core stays infrastructure-neutral</strong><p>Protocol packages use core abstractions; SQLite implements the repository boundary; the UI talks through the typed API client.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" id="api">
+      <div class="section-heading split">
+        <div><p class="eyebrow">03 / HTTP API</p><h2>Simple enough to curl.</h2></div>
+        <p>The local API is mounted at <code>/api</code> on port 6969. Responses use the existing typed contracts shared with the Web UI.</p>
+      </div>
+      <div class="api-table">
+        <div class="api-row api-head"><span>METHOD</span><span>PATH</span><span>PURPOSE</span></div>
+        <div class="api-row"><span class="method get">GET</span><code>/api/health</code><span>Runtime health</span></div>
+        <div class="api-row"><span class="method get">GET</span><code>/api/messages</code><span>List captured messages</span></div>
+        <div class="api-row"><span class="method get">GET</span><code>/api/messages/:id</code><span>Inspect one message</span></div>
+      </div>
+      <div class="api-detail">
+        <div><span>FILTERS</span><code>channel · status · provider · limit</code></div>
+        <div><span>ORDER</span><code>createdAt DESC · id tie-breaker</code></div>
+        <div><span>CURSOR</span><code>currently rejected with 400</code></div>
+      </div>
+    </section>
+
+    <section class="section shell" id="faq">
+      <div class="section-heading"><p class="eyebrow">04 / FAQ</p><h2>Things worth knowing.</h2></div>
+      <div class="faq-list">
+        <details open><summary>Does MsgDock send messages to real users?</summary><p>No. The current runtime is designed for local capture. SMTP messages are parsed, normalized, and stored locally rather than delivered to an external provider.</p></details>
+        <details><summary>Do I need to change application code?</summary><p>For email capture, no MsgDock SDK is required. An existing SMTP-based application can point its SMTP transport at <code>localhost:1430</code>.</p></details>
+        <details><summary>Where are captured messages stored?</summary><p>SQLite is used by default, with the database at <code>.msgdock/msgdock.sqlite</code>.</p></details>
+        <details><summary>Is SMS supported?</summary><p>Local SMS capture is currently available through the HTTP ingestion endpoint on <code>localhost:1431</code> when <code>MSGDOCK_SMS_ENABLED=true</code>. External SMS provider integrations are future work.</p></details>
+        <details><summary>What is planned next?</summary><p>The project is structured to support additional channels, providers, lifecycle simulation, callbacks/webhooks, and other future capabilities. Those are not presented as current functionality.</p></details>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <div class="shell cta-inner">
+        <p class="eyebrow">OPEN SOURCE / APACHE 2.0</p>
+        <h2>Build locally.<br>Inspect confidently.</h2>
+        <p>Read the source, run MsgDock locally, and shape the next part of the project.</p>
+        <div class="actions"><a class="button primary" href="https://github.com/PranavDike/msgdock">Open repository ↗</a><a class="button secondary" href="https://github.com/PranavDike/msgdock/issues">See issues ↗</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="shell"><span>msgdock</span><span>local communication sandbox · Apache 2.0</span></div></footer>
+  <script src="./script.js" defer></script>
+</body>
+</html>
