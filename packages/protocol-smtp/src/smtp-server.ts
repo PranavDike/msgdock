@@ -4,6 +4,7 @@ import { simpleParser, type AddressObject } from 'mailparser';
 import { SMTPServer, type SMTPServerDataStream } from 'smtp-server';
 
 import type { MessageService } from '@msgdock/core';
+import type { Protocol } from '@msgdock/protocols';
 
 export interface SmtpServerOptions {
   host: string;
@@ -24,7 +25,8 @@ function getAddresses(
     .join(', ');
 }
 
-export class SmtpServerAdapter {
+export class SmtpServerAdapter implements Protocol {
+  readonly name = 'smtp';
   private readonly server: SMTPServer;
 
   constructor(

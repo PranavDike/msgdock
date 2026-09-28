@@ -6,6 +6,7 @@ import {
 import type { AddressInfo } from 'node:net';
 
 import type { MessageService } from '@msgdock/core';
+import type { Protocol } from '@msgdock/protocols';
 
 export interface SmsServerOptions {
   host: string;
@@ -79,7 +80,9 @@ function parseSmsRequest(value: unknown): SmsMessageRequest {
   };
 }
 
-export class SmsServerAdapter {
+export class SmsServerAdapter implements Protocol {
+  readonly name = 'http';
+
   private readonly server = createServer((request, response) => {
     void this.handleRequest(request, response);
   });

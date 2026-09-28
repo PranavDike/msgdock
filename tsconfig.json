@@ -23,6 +23,12 @@
       "path": "./packages/protocol-sms"
     },
     {
+      "path": "./packages/providers"
+    },
+    {
+      "path": "./packages/protocols"
+    },
+    {
       "path": "./apps/web"
     },
     {
