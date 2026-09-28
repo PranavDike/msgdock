@@ -11,7 +11,8 @@ import { createApiHandler } from './api-handler.js';
 const sampleMessage: Message = {
   id: 'msg_1',
   channel: 'email',
-  provider: 'smtp',
+  protocol: 'smtp',
+  provider: 'local',
   status: 'queued',
   from: 'hello@example.com',
   to: 'developer@example.com',

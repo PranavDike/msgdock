@@ -60,7 +60,8 @@ describe('SmtpServerAdapter', () => {
     expect(messages[0]).toMatchObject({
       id: 'msg_smtp_test',
       channel: 'email',
-      provider: 'smtp',
+      protocol: 'smtp',
+      provider: 'local',
       status: 'queued',
       from: 'hello@example.com',
       to: 'developer@example.com',

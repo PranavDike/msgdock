@@ -19,6 +19,7 @@ afterEach(() => {
 const emailMessage: Message = {
   id: 'msg_test_email',
   channel: 'email',
+  protocol: 'smtp',
   provider: 'test-email',
   status: 'delivered',
   from: 'hello@msgdock.local',
@@ -31,6 +32,7 @@ const emailMessage: Message = {
 const workspaceMessage: Message = {
   id: 'msg_workspace_email',
   channel: 'email',
+  protocol: 'smtp',
   provider: 'smtp',
   status: 'delivered',
   from: 'hello@example.com',

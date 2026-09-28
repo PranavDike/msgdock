@@ -1,5 +1,5 @@
 {
-  "name": "@msgdock/core-runtime",
+  "name": "@msgdock/protocol-sms",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,20 +12,13 @@
     }
   },
   "dependencies": {
-    "@msgdock/config": "0.1.0",
-    "@msgdock/contracts": "0.1.0",
     "@msgdock/core": "0.1.0",
-    "@msgdock/protocol-smtp": "0.1.0",
-    "@msgdock/protocol-sms": "0.1.0",
-    "@msgdock/storage-sqlite": "0.1.0"
+    "@msgdock/protocols": "0.1.0"
   },
   "devDependencies": {
-    "nodemailer": "^7.0.4",
-    "tsx": "^4.19.3"
+    "@types/node": "^22.0.0"
   },
   "scripts": {
-    "dev": "tsx src/cli.ts",
-    "start": "node dist/cli.js",
     "build": "tsc",
     "typecheck": "tsc -b",
     "test": "vitest run"

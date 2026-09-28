@@ -36,7 +36,8 @@ describe('MessageService', () => {
 
     const message = await service.create({
       channel: 'email',
-      provider: 'smtp',
+      protocol: 'smtp',
+      provider: 'local',
       from: ' hello@example.com ',
       to: 'developer@example.com',
       subject: ' Hello ',
@@ -46,7 +47,8 @@ describe('MessageService', () => {
     expect(message).toEqual({
       id: 'msg_generated',
       channel: 'email',
-      provider: 'smtp',
+      protocol: 'smtp',
+      provider: 'local',
       status: 'queued',
       from: 'hello@example.com',
       to: 'developer@example.com',
@@ -71,7 +73,8 @@ describe('MessageService', () => {
     await expect(
       service.create({
         channel: 'email',
-        provider: 'smtp',
+        protocol: 'smtp',
+        provider: 'local',
         from: '',
         to: 'developer@example.com',
         body: 'Body',

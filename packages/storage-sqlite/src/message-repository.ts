@@ -2,14 +2,14 @@ import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 import type { ListMessagesQuery, Message } from '@msgdock/contracts';
-import Database from 'better-sqlite3';
-
 import { UnsupportedQueryError } from '@msgdock/core';
 import type { MessageRepository } from '@msgdock/core';
+import Database from 'better-sqlite3';
 
 interface MessageRow {
   id: string;
   channel: Message['channel'];
+  protocol: string;
   provider: string;
   status: Message['status'];
   from_address: string;
@@ -23,6 +23,7 @@ function toMessage(row: MessageRow): Message {
   return {
     id: row.id,
     channel: row.channel,
+    protocol: row.protocol,
     provider: row.provider,
     status: row.status,
     from: row.from_address,
@@ -31,6 +32,18 @@ function toMessage(row: MessageRow): Message {
     createdAt: row.created_at,
     ...(row.subject === null ? {} : { subject: row.subject }),
   };
+}
+
+function hasColumn(
+  database: Database.Database,
+  table: string,
+  column: string,
+): boolean {
+  const columns = database
+    .prepare(`PRAGMA table_info(${table})`)
+    .all() as Array<{ name: string }>;
+
+  return columns.some((entry) => entry.name === column);
 }
 
 export class SQLiteMessageRepository implements MessageRepository {
@@ -43,7 +56,9 @@ export class SQLiteMessageRepository implements MessageRepository {
 
     this.database = new Database(databasePath);
 
-    if (databasePath !== ':memory:') this.database.pragma('journal_mode = WAL');
+    if (databasePath !== ':memory:') {
+      this.database.pragma('journal_mode = WAL');
+    }
 
     this.database.exec(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -54,6 +69,7 @@ export class SQLiteMessageRepository implements MessageRepository {
       CREATE TABLE IF NOT EXISTS messages (
         id TEXT PRIMARY KEY,
         channel TEXT NOT NULL CHECK (channel IN ('email', 'sms')),
+        protocol TEXT NOT NULL,
         provider TEXT NOT NULL,
         status TEXT NOT NULL CHECK (status IN ('queued', 'sent', 'delivered', 'failed')),
         from_address TEXT NOT NULL,
@@ -62,14 +78,47 @@ export class SQLiteMessageRepository implements MessageRepository {
         body TEXT NOT NULL,
         created_at TEXT NOT NULL
       );
+    `);
 
+    const hasProtocolColumn = hasColumn(this.database, 'messages', 'protocol');
+
+    if (!hasProtocolColumn) {
+      this.database.exec(`
+        ALTER TABLE messages
+          ADD COLUMN protocol TEXT;
+
+        UPDATE messages
+        SET protocol = CASE channel
+          WHEN 'email' THEN 'smtp'
+          WHEN 'sms' THEN 'http'
+        END
+        WHERE protocol IS NULL;
+
+        CREATE INDEX IF NOT EXISTS messages_protocol_created_at_idx
+          ON messages (protocol, created_at DESC, id DESC);
+      `);
+
+      this.database
+        .prepare(
+          'INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (2, ?)',
+        )
+        .run(new Date().toISOString());
+    }
+
+    this.database.exec(`
       CREATE INDEX IF NOT EXISTS messages_channel_created_at_idx
         ON messages (channel, created_at DESC, id DESC);
+
       CREATE INDEX IF NOT EXISTS messages_status_created_at_idx
         ON messages (status, created_at DESC, id DESC);
+
+      CREATE INDEX IF NOT EXISTS messages_protocol_created_at_idx
+        ON messages (protocol, created_at DESC, id DESC);
+
       CREATE INDEX IF NOT EXISTS messages_provider_created_at_idx
         ON messages (provider, created_at DESC, id DESC);
     `);
+
     this.database
       .prepare(
         'INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (1, ?)',
@@ -81,12 +130,33 @@ export class SQLiteMessageRepository implements MessageRepository {
     this.database
       .prepare(
         `INSERT INTO messages (
-          id, channel, provider, status, from_address, to_address, subject, body, created_at
-        ) VALUES (@id, @channel, @provider, @status, @from, @to, @subject, @body, @createdAt)`,
+          id,
+          channel,
+          protocol,
+          provider,
+          status,
+          from_address,
+          to_address,
+          subject,
+          body,
+          created_at
+        ) VALUES (
+          @id,
+          @channel,
+          @protocol,
+          @provider,
+          @status,
+          @from,
+          @to,
+          @subject,
+          @body,
+          @createdAt
+        )`,
       )
       .run({
         id: message.id,
         channel: message.channel,
+        protocol: message.protocol,
         provider: message.provider,
         status: message.status,
         from: message.from,
@@ -95,6 +165,7 @@ export class SQLiteMessageRepository implements MessageRepository {
         body: message.body,
         createdAt: message.createdAt,
       });
+
     return Promise.resolve();
   }
 
@@ -126,6 +197,11 @@ export class SQLiteMessageRepository implements MessageRepository {
       parameters.status = query.status;
     }
 
+    if (query.protocol) {
+      conditions.push('protocol = @protocol');
+      parameters.protocol = query.protocol;
+    }
+
     if (query.provider) {
       conditions.push('provider = @provider');
       parameters.provider = query.provider;
@@ -133,6 +209,7 @@ export class SQLiteMessageRepository implements MessageRepository {
 
     const where =
       conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
     const limit = query.limit ?? 100;
     parameters.limit = limit;
 

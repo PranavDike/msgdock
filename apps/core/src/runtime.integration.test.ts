@@ -126,7 +126,8 @@ describe('core runtime integration', () => {
 
     expect(messages[0]).toMatchObject({
       channel: 'email',
-      provider: 'smtp',
+      protocol: 'smtp',
+      provider: 'local',
       status: 'queued',
       from: 'hello@example.com',
       to: 'developer@example.com',
@@ -172,7 +173,8 @@ describe('core runtime integration', () => {
     expect(payload.data).toMatchObject({
       id: messageId,
       channel: 'email',
-      provider: 'smtp',
+      protocol: 'smtp',
+      provider: 'local',
       status: 'queued',
       from: 'hello@example.com',
       to: 'developer@example.com',
@@ -217,7 +219,8 @@ describe('core runtime integration', () => {
       expect(messagesAfterRestart[0]).toMatchObject({
         id: messageId,
         channel: 'email',
-        provider: 'smtp',
+        protocol: 'smtp',
+        provider: 'local',
         status: 'queued',
         from: 'hello@example.com',
         to: 'developer@example.com',
@@ -284,7 +287,8 @@ describe('core runtime integration', () => {
     expect(payload.type).toBe('message.created');
     expect(payload.message).toMatchObject({
       channel: 'email',
-      provider: 'smtp',
+      protocol: 'smtp',
+      provider: 'local',
       status: 'queued',
       from: 'hello@example.com',
       to: 'developer@example.com',

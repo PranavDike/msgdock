@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@msgdock/core": "0.1.0",
+    "@msgdock/protocols": "0.1.0",
     "mailparser": "^3.9.0",
     "smtp-server": "^3.13.6"
   },
