@@ -10,6 +10,7 @@ import type { MessageRepository } from '@msgdock/core';
 interface MessageRow {
   id: string;
   channel: Message['channel'];
+  protocol: string;
   provider: string;
   status: Message['status'];
   from_address: string;
@@ -23,6 +24,7 @@ function toMessage(row: MessageRow): Message {
   return {
     id: row.id,
     channel: row.channel,
+    protocol: row.protocol,
     provider: row.provider,
     status: row.status,
     from: row.from_address,
@@ -51,22 +53,25 @@ export class SQLiteMessageRepository implements MessageRepository {
         applied_at TEXT NOT NULL
       );
 
-      CREATE TABLE IF NOT EXISTS messages (
-        id TEXT PRIMARY KEY,
-        channel TEXT NOT NULL CHECK (channel IN ('email', 'sms')),
-        provider TEXT NOT NULL,
-        status TEXT NOT NULL CHECK (status IN ('queued', 'sent', 'delivered', 'failed')),
-        from_address TEXT NOT NULL,
-        to_address TEXT NOT NULL,
-        subject TEXT,
-        body TEXT NOT NULL,
-        created_at TEXT NOT NULL
-      );
+    CREATE TABLE IF NOT EXISTS messages (
+      id TEXT PRIMARY KEY,
+      channel TEXT NOT NULL CHECK (channel IN ('email', 'sms')),
+      protocol TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      status TEXT NOT NULL CHECK (status IN ('queued', 'sent', 'delivered', 'failed')),
+      from_address TEXT NOT NULL,
+      to_address TEXT NOT NULL,
+      subject TEXT,
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
 
       CREATE INDEX IF NOT EXISTS messages_channel_created_at_idx
         ON messages (channel, created_at DESC, id DESC);
       CREATE INDEX IF NOT EXISTS messages_status_created_at_idx
         ON messages (status, created_at DESC, id DESC);
+      CREATE INDEX IF NOT EXISTS messages_protocol_created_at_idx
+        ON messages (protocol, created_at DESC, id DESC);
       CREATE INDEX IF NOT EXISTS messages_provider_created_at_idx
         ON messages (provider, created_at DESC, id DESC);
     `);
@@ -81,12 +86,13 @@ export class SQLiteMessageRepository implements MessageRepository {
     this.database
       .prepare(
         `INSERT INTO messages (
-          id, channel, provider, status, from_address, to_address, subject, body, created_at
-        ) VALUES (@id, @channel, @provider, @status, @from, @to, @subject, @body, @createdAt)`,
+          id, channel, protocol, provider, status, from_address, to_address, subject, body, created_at
+        ) VALUES (@id, @channel, @protocol, @provider, @status, @from, @to, @subject, @body, @createdAt)`,
       )
       .run({
         id: message.id,
         channel: message.channel,
+        protocol: message.protocol,
         provider: message.provider,
         status: message.status,
         from: message.from,
@@ -124,6 +130,11 @@ export class SQLiteMessageRepository implements MessageRepository {
     if (query.status) {
       conditions.push('status = @status');
       parameters.status = query.status;
+    }
+
+    if (query.protocol) {
+      conditions.push('protocol = @protocol');
+      parameters.protocol = query.protocol;
     }
 
     if (query.provider) {

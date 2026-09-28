@@ -8,7 +8,8 @@ function message(overrides: Partial<Message> = {}): Message {
   return {
     id: 'msg_1',
     channel: 'email',
-    provider: 'smtp',
+    protocol: 'smtp',
+    provider: 'local',
     status: 'queued',
     from: 'hello@example.com',
     to: 'developer@example.com',
@@ -47,7 +48,8 @@ describe('SQLiteMessageRepository', () => {
       message({
         id: 'msg_2',
         channel: 'sms',
-        provider: 'twilio',
+        protocol: 'http',
+        provider: 'local',
         status: 'failed',
         createdAt: '2026-09-10T11:00:00.000Z',
       }),

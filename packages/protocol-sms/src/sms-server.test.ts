@@ -65,7 +65,8 @@ describe('SmsServerAdapter', () => {
     expect(messages[0]).toMatchObject({
       id: 'msg_sms_test',
       channel: 'sms',
-      provider: 'sms',
+      protocol: 'http',
+      provider: 'local',
       status: 'queued',
       from: '+15550000001',
       to: '+15550000002',

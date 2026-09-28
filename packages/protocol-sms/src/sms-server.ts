@@ -160,7 +160,8 @@ export class SmsServerAdapter implements Protocol {
 
       const message = await this.messageService.create({
         channel: 'sms',
-        provider: 'sms',
+        protocol: 'http',
+        provider: 'local',
         from: payload.from,
         to: payload.to,
         body: payload.body,

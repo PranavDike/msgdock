@@ -11,6 +11,7 @@ import type { MessageRepository } from './repository.js';
 
 export interface CreateMessageInput {
   channel: Channel;
+  protocol: string;
   provider: string;
   status?: MessageStatus;
   from: string;
@@ -32,14 +33,15 @@ export class MessageService {
   ) {}
 
   async create(input: CreateMessageInput): Promise<Message> {
+    const protocol = input.protocol.trim();
     const provider = input.provider.trim();
     const from = input.from.trim();
     const to = input.to.trim();
     const body = typeof input.body === 'string' ? input.body.trim() : '';
 
-    if (!provider || !from || !to || !body) {
+    if (!protocol || !provider || !from || !to || !body) {
       throw new MessageValidationError(
-        'provider, from, to, and body are required',
+        'protocol, provider, from, to, and body are required',
       );
     }
 
@@ -47,6 +49,7 @@ export class MessageService {
     const message: Message = {
       id: this.options.idGenerator(),
       channel: input.channel,
+      protocol,
       provider,
       status: input.status ?? 'queued',
       from,

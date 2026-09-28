@@ -101,7 +101,8 @@ export class SmtpServerAdapter implements Protocol {
 
     await this.messageService.create({
       channel: 'email',
-      provider: 'smtp',
+      protocol: 'smtp',
+      provider: 'local',
       from,
       to,
       ...(parsed.subject ? { subject: parsed.subject } : {}),
