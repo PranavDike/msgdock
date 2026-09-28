@@ -4,6 +4,8 @@ An open-source, provider-aware communication sandbox for local development and C
 
 MsgDock captures application communications locally so developers can inspect them without delivering them to real users or external providers.
 
+**[Project site](https://pranavdike.github.io/msgdock/)** · **[GitHub repository](https://github.com/PranavDike/msgdock)**
+
 ## Quick start
 
 Requirements: Node.js 20+ and npm.
