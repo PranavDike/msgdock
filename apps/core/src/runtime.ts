@@ -6,6 +6,7 @@ import type { AddressInfo } from 'node:net';
 import type { MsgDockConfig } from '@msgdock/config';
 import { InProcessEventBus, MessageService } from '@msgdock/core';
 import { SmtpServerAdapter } from '@msgdock/protocol-smtp';
+import { SmsServerAdapter } from '@msgdock/protocol-sms';
 import { SQLiteMessageRepository } from '@msgdock/storage-sqlite';
 
 import { createApiHandler } from './api-handler.js';
@@ -25,6 +26,7 @@ export interface CoreRuntime {
   stop(): Promise<void>;
   httpAddress(): AddressInfo | null;
   smtpAddress(): AddressInfo | null;
+  smsAddress(): AddressInfo | null;
 }
 
 export function createRuntime(
@@ -66,6 +68,11 @@ export function createRuntime(
   const smtpServer = config.smtp.enabled
     ? new SmtpServerAdapter(messageService, config.smtp)
     : null;
+
+  const smsServer = config.sms.enabled
+    ? new SmsServerAdapter(messageService, config.sms)
+    : null;
+
   let closed = false;
 
   return {
@@ -75,6 +82,7 @@ export function createRuntime(
       try {
         await httpServer.start();
         if (smtpServer) await smtpServer.start();
+        if (smsServer) await smsServer.start();
       } catch (error) {
         await this.stop();
         throw error;
@@ -85,6 +93,7 @@ export function createRuntime(
 
       try {
         if (smtpServer) await smtpServer.stop();
+        if (smsServer) await smsServer.stop();
         await httpServer.stop();
       } finally {
         repository.close();
@@ -97,6 +106,9 @@ export function createRuntime(
     },
     smtpAddress() {
       return smtpServer?.address() ?? null;
+    },
+    smsAddress(): AddressInfo | null {
+      return smsServer?.address() ?? null;
     },
   };
 }

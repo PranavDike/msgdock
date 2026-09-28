@@ -20,6 +20,9 @@
       "path": "./packages/protocol-smtp"
     },
     {
+      "path": "./packages/protocol-sms"
+    },
+    {
       "path": "./apps/web"
     },
     {

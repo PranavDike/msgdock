@@ -11,12 +11,19 @@ export async function main(): Promise<void> {
 
   const httpAddress = runtime.httpAddress();
   const smtpAddress = runtime.smtpAddress();
+  const smsAddress = runtime.smsAddress();
+
   console.log(
     `MsgDock listening on HTTP ${httpAddress?.address ?? 'configured host'}:${httpAddress?.port ?? 'configured port'}`,
   );
   if (smtpAddress) {
     console.log(
       `SMTP ingestion listening on ${smtpAddress.address}:${smtpAddress.port}`,
+    );
+  }
+  if (smsAddress) {
+    console.log(
+      `SMS ingestion listening on ${smsAddress.address}:${smsAddress.port}`,
     );
   }
 
