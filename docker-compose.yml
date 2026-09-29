@@ -1,0 +1,23 @@
+services:
+  msgdock:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: msgdock:local
+    restart: unless-stopped
+    ports:
+      - "6969:6969"
+      - "1430:1430"
+      - "1431:1431"
+    environment:
+      NODE_ENV: production
+      MSGDOCK_HTTP_HOST: 0.0.0.0
+      MSGDOCK_SMTP_HOST: 0.0.0.0
+      MSGDOCK_SMS_HOST: 0.0.0.0
+      MSGDOCK_SMS_ENABLED: "false"
+      MSGDOCK_DATABASE_PATH: /data/msgdock.sqlite
+    volumes:
+      - msgdock-data:/data
+
+volumes:
+  msgdock-data:
