@@ -4,3 +4,4 @@ coverage/
 build/
 .git/
 package-lock.json
+website/
