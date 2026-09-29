@@ -1,3 +1,4 @@
+# prettier-ignore
 services:
   msgdock:
     build:
