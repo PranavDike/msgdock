@@ -9,6 +9,7 @@ export default tseslint.config(
       '**/dist/**',
       'coverage/**',
       'build/**',
+      'website/**',
       '.git/**',
     ],
   },
