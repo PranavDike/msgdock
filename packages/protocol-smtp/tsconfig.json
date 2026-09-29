@@ -18,8 +18,5 @@
     "outDir": "dist"
   },
   "include": ["src"],
-  "references": [
-    { "path": "../core" },
-    { "path": "../protocols" }
-  ]
+  "references": [{ "path": "../core" }, { "path": "../protocols" }]
 }
